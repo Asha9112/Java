@@ -1,0 +1,204 @@
+package com.project.app;
+
+import java.sql.*;
+import java.util.Scanner;
+
+public class LibraryManagementSystem {
+    private Connection connection;
+
+    public LibraryManagementSystem() {
+        try {
+            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/librarymanagementsystem", "root", "Asha");
+        } catch (SQLException e) {
+            System.out.println("Error connecting to database: " + e.getMessage());
+        }
+    }
+
+    public void addBook() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter book ID: ");
+        int id = scanner.nextInt();
+        scanner.nextLine();
+        System.out.print("Enter book title: ");
+        String title = scanner.nextLine();
+        System.out.print("Enter book author: ");
+        String author = scanner.nextLine();
+        System.out.print("Enter book genre: ");
+        String genre = scanner.nextLine();
+
+        try {
+            PreparedStatement statement = connection.prepareStatement("INSERT INTO books (id, title, author, genre) VALUES (?, ?, ?, ?)");
+            statement.setInt(1, id);
+            statement.setString(2, title);
+            statement.setString(3, author);
+            statement.setString(4, genre);
+            statement.executeUpdate();
+            System.out.println("Book added successfully!");
+        } catch (SQLException e) {
+            System.out.println("Error adding book: " + e.getMessage());
+        }
+    }
+
+    public void viewBooks() {
+        try {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM books");
+
+            while (resultSet.next()) {
+                System.out.println("ID: " + resultSet.getInt("id"));
+                System.out.println("Title: " + resultSet.getString("title"));
+                System.out.println("Author: " + resultSet.getString("author"));
+                System.out.println("Genre: " + resultSet.getString("genre"));
+                System.out.println("Borrowed: " + resultSet.getBoolean("borrowed"));
+                System.out.println();
+            }
+        } catch (SQLException e) {
+            System.out.println("Error viewing books: " + e.getMessage());
+        }
+    }
+
+    public void searchBooks() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter keyword to search (title/author/genre): ");
+        String keyword = scanner.nextLine();
+
+        try {
+            String query = "SELECT * FROM books WHERE title LIKE ? OR author LIKE ? OR genre LIKE ?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            String likeKeyword = "%" + keyword + "%";
+            statement.setString(1, likeKeyword);
+            statement.setString(2, likeKeyword);
+            statement.setString(3, likeKeyword);
+
+            ResultSet resultSet = statement.executeQuery();
+
+            boolean found = false;
+            while (resultSet.next()) {
+                found = true;
+                System.out.println("ID: " + resultSet.getInt("id"));
+                System.out.println("Title: " + resultSet.getString("title"));
+                System.out.println("Author: " + resultSet.getString("author"));
+                System.out.println("Genre: " + resultSet.getString("genre"));
+                System.out.println("Borrowed: " + resultSet.getBoolean("borrowed"));
+                System.out.println();
+            }
+            if (!found) {
+                System.out.println("No books found with that keyword.");
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Error searching books: " + e.getMessage());
+        }
+    }
+
+    public void borrowBook() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter borrower ID: ");
+        int borrowerId = scanner.nextInt();
+        scanner.nextLine();
+        System.out.print("Enter your name: ");
+        String name = scanner.nextLine();
+        System.out.print("Enter book ID to borrow: ");
+        int bookId = scanner.nextInt();
+        scanner.nextLine();
+
+        try {
+            PreparedStatement checkStmt = connection.prepareStatement("SELECT borrowed FROM books WHERE id = ?");
+            checkStmt.setInt(1, bookId);
+            ResultSet rs = checkStmt.executeQuery();
+            if (!rs.next()) {
+                System.out.println("Book not found.");
+                return;
+            }
+            if (rs.getBoolean("borrowed")) {
+                System.out.println("Book is already borrowed.");
+                return;
+            }
+
+            PreparedStatement insertStmt = connection.prepareStatement("INSERT INTO borrowers (id, name, book_id) VALUES (?, ?, ?)");
+            insertStmt.setInt(1, borrowerId);
+            insertStmt.setString(2, name);
+            insertStmt.setInt(3, bookId);
+            insertStmt.executeUpdate();
+
+            PreparedStatement updateStmt = connection.prepareStatement("UPDATE books SET borrowed = TRUE WHERE id = ?");
+            updateStmt.setInt(1, bookId);
+            updateStmt.executeUpdate();
+
+            System.out.println("Book borrowed successfully!");
+        } catch (SQLException e) {
+            System.out.println("Error borrowing book: " + e.getMessage());
+        }
+    }
+
+    public void returnBook() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter book ID to return: ");
+        int bookId = scanner.nextInt();
+        scanner.nextLine();
+
+        try {
+            PreparedStatement checkStmt = connection.prepareStatement("SELECT borrowed FROM books WHERE id = ?");
+            checkStmt.setInt(1, bookId);
+            ResultSet rs = checkStmt.executeQuery();
+
+            if (!rs.next() || !rs.getBoolean("borrowed")) {
+                System.out.println("Book is not currently borrowed.");
+                return;
+            }
+
+            PreparedStatement deleteStmt = connection.prepareStatement("DELETE FROM borrowers WHERE book_id = ?");
+            deleteStmt.setInt(1, bookId);
+            deleteStmt.executeUpdate();
+
+            PreparedStatement updateStmt = connection.prepareStatement("UPDATE books SET borrowed = FALSE WHERE id = ?");
+            updateStmt.setInt(1, bookId);
+            updateStmt.executeUpdate();
+
+            System.out.println("Book returned successfully.");
+        } catch (SQLException e) {
+            System.out.println("Error returning book: " + e.getMessage());
+        }
+    }
+
+    public static void main(String[] args) {
+        LibraryManagementSystem library = new LibraryManagementSystem();
+        Scanner scanner = new Scanner(System.in);
+
+        while (true) {
+            System.out.println("\n=== Library Menu ===");
+            System.out.println("1. Add book");
+            System.out.println("2. View books");
+            System.out.println("3. Search books");
+            System.out.println("4. Borrow book");
+            System.out.println("5. Return book");
+            System.out.println("6. Exit");
+            System.out.print("Choose an option: ");
+            int choice = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (choice) {
+                case 1:
+                    library.addBook();
+                    break;
+                case 2:
+                    library.viewBooks();
+                    break;
+                case 3:
+                    library.searchBooks();
+                    break;
+                case 4:
+                    library.borrowBook();
+                    break;
+                case 5:
+                    library.returnBook();
+                    break;
+                case 6:
+                    System.out.println("Exiting...");
+                    return;
+                default:
+                    System.out.println("Invalid choice.");
+            }
+        }
+    }
+}
