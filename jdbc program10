@@ -1,0 +1,46 @@
+package com.tap.app;
+
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Scanner;
+// count the number of employees working in the specific department Stored procedure:
+
+public class program10 {
+	static String url="jdbc:mysql://localhost:3306/jdbcClasses";
+	static String username="root";
+	static String password="Asha";
+	private static Connection con;
+
+	public static void main(String[] args) {
+		try {
+			//Load the driver
+		Class.forName("com.mysql.cj.jdbc.Driver");
+		// Establish connecion to database
+		con = DriverManager.getConnection(url, username, password);
+		// create statement(prepareCall)
+		CallableStatement call=con.prepareCall("{call emp_count(?,?)}");
+		// Set the parameters 
+		System.out.println("Enter the department");
+		Scanner scan= new Scanner(System.in);
+		String dept=scan.next();
+		call.setString(1, dept);
+		call.registerOutParameter(2, Types.INTEGER);
+		// execute the query
+		call.execute();
+		//retrieve the output parametervalue
+		int res=call.getInt(2);
+		System.out.println(res);
+
+	}
+		catch(ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		catch(SQLException e) {
+			e.printStackTrace();
+		}
+
+}
+}
