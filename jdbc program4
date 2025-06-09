@@ -1,0 +1,37 @@
+package com.tap.app;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+public class program4 {
+
+	public static void main(String[] args) {
+		try {
+			String url="jdbc:mysql://localhost:3306/jdbcClasses";
+			String username="root";
+			String password="Asha";
+			String DELETE_QUERY="DELETE from employee1 WHERE department='finance'";
+			// Load the Driver
+			Class.forName("com.mysql.cj.jdbc.Driver");
+			// Establish connection to database
+			Connection con=DriverManager.getConnection(url, username, password);
+			// Create SQL Statement
+			Statement stmt=con.createStatement();
+			// Execute SQL queries
+			int i=stmt.executeUpdate(DELETE_QUERY);
+			System.out.println(i);
+			
+		}
+		catch(ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		catch(SQLException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+}
