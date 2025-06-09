@@ -1,0 +1,64 @@
+package com.tap.app;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.Scanner;
+import java.sql.PreparedStatement;
+
+public class program9 {
+	private static final Scanner scan=new Scanner(System.in);
+	static String url="jdbc:mysql://localhost:3306/jdbcClasses";
+	static String username="root";
+	static String password="Asha";
+	private static Connection con;
+	private static String UPDATE_BALANCE="UPDATE employee1 SET salary=salary-? WHERE name=?";
+	public static void main(String[] args) {
+		try {
+			Class.forName("com.mysql.cj.jdbc.Driver");
+			con=DriverManager.getConnection(url,username,password);
+			program1.printTable(con);
+			con.setAutoCommit(false);
+			transaction();
+			program1.printTable(con);
+		}catch(ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		catch(SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	public static void transaction() throws SQLException{
+		System.out.println("Enter the sender");
+		String sender=scan.next();
+		System.out.println("Enter the receiver");
+		String receiver=scan.next();
+		System.out.println("Enter the amount");
+		int amount=scan.nextInt();
+		
+		int res1=UpdateBalance(sender,amount);
+		int res2=UpdateBalance(receiver,-amount);
+		
+		System.out.println(res1);
+		System.out.println(res2);
+		
+		if(isConfirm(res1,res2)) {
+			con.commit();
+			System.out.println("Transaction Successfull");
+		}else {
+			con.rollback();
+			System.out.println("Transaction Failed");
+		}
+	}
+	public static int UpdateBalance(String sender,int amount) throws SQLException{
+		PreparedStatement stmt=con.prepareStatement(UPDATE_BALANCE);
+		stmt.setInt(1, amount);
+		stmt.setString(2, sender);
+		int res=stmt.executeUpdate();
+		return res;
+	}
+	public static boolean isConfirm(int x,int y) {
+		System.out.println("Do you want to confirm the transaction?(yes/no)");
+		String choice=scan.next();
+		return choice.equalsIgnoreCase("yes")&& x==1 && y==1;
+	}
+}
