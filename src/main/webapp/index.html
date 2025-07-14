@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login & Signup</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background-color: #009688;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      width: 400px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    .error-box {
+      padding: 10px;
+      margin-bottom: 10px;
+      border-left: 5px solid;
+      display: none;
+    }
+
+    .error-box.error {
+      background: #ffdddd;
+      color: red;
+      border-color: red;
+    }
+
+    .error-box.success {
+      background: #ddffdd;
+      color: green;
+      border-color: green;
+    }
+
+    form {
+      display: none;
+      flex-direction: column;
+    }
+
+    form.active {
+      display: flex;
+    }
+
+    input, textarea {
+      margin: 10px 0;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .submit-btn {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .submit-btn:hover {
+      background-color: #0056b3;
+    }
+
+    .link-text {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+
+    .link-text a {
+      color: #007bff;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .forgot {
+      text-align: right;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .forgot a {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .message {
+      font-size: 13px;
+      color: red;
+      margin-top: -8px;
+      margin-bottom: 8px;
+    }
+
+    .message.success {
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Error/Success Box -->
+    <div class="error-box" id="messageBox"></div>
+
+    <!-- Login Form -->
+    <form id="loginForm" class="active" action="LoginServlet" method="post">
+      <h2>Login</h2>
+      <input type="email" name="email" placeholder="e.g. name@example.com" required />
+      <input type="password" name="password" placeholder="Password" required />
+      <div class="forgot"><a href="forgot-password.html">Forgot Password?</a></div>
+      <button class="submit-btn" type="submit">Login</button>
+      <div class="link-text">Don’t have an account? <a id="showSignup">Sign up</a></div>
+    </form>
+
+    <!-- Signup Form -->
+    <form id="signupForm" action="SignupServlet" method="post">
+      <h2>Signup</h2>
+      <input type="text" name="name" placeholder="Full Name" required />
+      <input type="email" name="email" placeholder="e.g. name@example.com" required />
+      <input type="text" name="phone" id="phone" placeholder="Phone Number" required maxlength="10" />
+      <textarea name="address" placeholder="Address (max 200 chars)" maxlength="200" required></textarea>
+      <input type="password" name="password" id="password" placeholder="Password" required />
+      <div id="passwordMessage" class="message"></div>
+      <input type="password" name="confirmPassword" placeholder="Confirm Password" required />
+      <button class="submit-btn" type="submit">Signup</button>
+      <div class="link-text">Already have an account? <a id="showLogin">Login</a></div>
+    </form>
+  </div>
+
+  <script>
+    const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
+    const showSignup = document.getElementById('showSignup');
+    const showLogin = document.getElementById('showLogin');
+    const phoneInput = document.getElementById('phone');
+    const passwordField = document.getElementById('password');
+    const passwordMessage = document.getElementById('passwordMessage');
+    const messageBox = document.getElementById('messageBox');
+
+    showSignup.onclick = () => {
+      loginForm.classList.remove('active');
+      signupForm.classList.add('active');
+      clearMessages();
+    };
+
+    showLogin.onclick = () => {
+      signupForm.classList.remove('active');
+      loginForm.classList.add('active');
+      clearMessages();
+    };
+
+    function clearMessages() {
+      messageBox.style.display = "none";
+      messageBox.innerHTML = "";
+      messageBox.classList.remove("success", "error");
+    }
+
+    // Limit phone number to 10 digits max while typing
+    phoneInput.addEventListener("input", () => {
+      phoneInput.value = phoneInput.value.replace(/\D/g, "").slice(0, 10);
+    });
+
+    // Live password strength check
+    passwordField.addEventListener("input", function () {
+      const pwd = passwordField.value;
+      const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
+      if (regex.test(pwd)) {
+        passwordMessage.textContent = "✅ Password is strong";
+        passwordMessage.classList.add("success");
+      } else {
+        passwordMessage.textContent = "Password must include uppercase, lowercase, number & special character.";
+        passwordMessage.classList.remove("success");
+      }
+    });
+
+    // Show message from query string
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('error')) {
+      messageBox.classList.add("error");
+      messageBox.textContent = decodeURIComponent(params.get('error'));
+      messageBox.style.display = "block";
+      if (params.get('form') === 'signup') {
+        loginForm.classList.remove('active');
+        signupForm.classList.add('active');
+      }
+    }
+    if (params.has('success')) {
+      messageBox.classList.add("success");
+      messageBox.textContent = decodeURIComponent(params.get('success'));
+      messageBox.style.display = "block";
+      loginForm.classList.remove('active');
+      signupForm.classList.add('active');
+      // Clear form fields
+      signupForm.reset();
+      passwordMessage.textContent = "";
+    }
+  </script>
+</body>
+</html>
+
+
+

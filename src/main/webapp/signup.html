@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Signup Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .container {
+      background: #fff;
+      padding: 30px;
+      width: 400px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      border-radius: 10px;
+    }
+    .container h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .message {
+      font-weight: bold;
+      text-align: center;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 15px;
+    }
+    .message.success {
+      color: green;
+      background-color: #e7f8ec;
+    }
+    .message.error {
+      color: red;
+      background-color: #fdecea;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #007bff;
+      border: none;
+      color: #fff;
+      border-radius: 5px;
+    }
+    .link {
+      text-align: center;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Signup</h2>
+
+  <!-- Message shown here -->
+  <div class="message" id="serverMessage" style="display:none;"></div>
+
+  <form id="signupForm" method="post" action="SignupServlet">
+    <input type="text" name="name" placeholder="Name" required>
+    <input type="email" name="email" placeholder="Email (e.g. name@gmail.com)" required>
+    <input type="text" name="phone" placeholder="Phone (10 digits)" maxlength="10" required>
+    <textarea name="address" placeholder="Address" maxlength="150" required></textarea>
+    <input type="password" name="password" placeholder="Password" required>
+    <input type="password" name="confirmPassword" placeholder="Confirm Password" required>
+    <button type="submit">Sign Up</button>
+  </form>
+
+  <div class="link">
+    Already have an account? <a href="login.html">Login</a>
+  </div>
+</div>
+
+<script>
+  // Show server message if redirected back from servlet with parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const msg = urlParams.get("msg");
+  const type = urlParams.get("type");
+
+  if (msg && type) {
+    const msgBox = document.getElementById("serverMessage");
+    msgBox.innerText = decodeURIComponent(msg);
+    msgBox.classList.add(type === "success" ? "success" : "error");
+    msgBox.style.display = "block";
+  }
+</script>
+
+</body>
+</html>
